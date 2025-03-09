@@ -14,7 +14,6 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include <algorithm>
 
 struct SingleCase {
     int num_days, num_customers;
