@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1741492427 source:/home/pica/Bocconi/algo/algorithm_problems/WhyNotTravel/main.cpp
+	<vector>
+	<iostream>
+	<math.h>
+
