@@ -13,6 +13,7 @@
  * The final complexity is O(log n).
  * -----------------------------------------
  * After submitting and failing due to excessive time, I've realized that my analysis was wrogn as I excluded the operations of min search and sum.
+ * In the wrost case scenario the complesxity would be O(n^2), which is catastrophic for an input of size 70k.
  * I though about a way to avoid a iterating through ranges each time to find the min and the sum.
  * The first thought was to calculate all the sums before the execution. By storing in another array all the sums up to the Nth element,
  * we can calculate the sum of a range by sums[r+1] - sums[l]. This was sufficient to pass the test.
@@ -27,13 +28,18 @@ using namespace std;
 
 
 /**
- * @brief reads the members data.
+ * @brief reads the members data and already calculates sums.
  * @param n_members: number of members
  * @param members: array for storing members values
+ * @param sums: array for storing sums
  */
-void get_members(long n_members, long members[]) {
-    for(int i=0; i<n_members; i++)
+void get_members(long n_members, long members[], long sums[]) {
+    sums[0] = 0;
+    for(int i=0; i<n_members; i++) {
         cin >> members[i];
+        sums[i+1] = sums[i] + members[i];
+    }
+
 }
 
 /**
@@ -43,8 +49,8 @@ void get_members(long n_members, long members[]) {
  * @param arr the array
  * @return the position of the lowest value in the range.
  */
-int find_min(long l, long r, long arr[]) {
-    long min_index = l, i;
+int find_min(int l, int r, long arr[]) {
+    int min_index = l, i;
 
     for(i=l+1; i<=r; i++) {
         if (arr[i] < arr[min_index])
@@ -53,7 +59,6 @@ int find_min(long l, long r, long arr[]) {
 
     return min_index;
 }
-
 
 /**
  * @brief find the strongest group of memebrs
@@ -93,38 +98,23 @@ long strongest_team(int n_members, long members[], long sums[]) {
     return max_value;
 }
 
-
-/**
- * @brief calculates the sum of all the elements up to the ith element.
- * @param n_members: number of elements in the original array.
- * @param members: original array
- * @param sums: array where to store the sums
- */
-void get_sums(int n_members, long members[], long sums[]) {
-    n_members++;
-    sums[0] = 0;
-    for(int i=1; i<n_members; i++)
-        sums[i] = sums[i-1] + members[i-1];
-}
-
-
 int main()
 {
-    long n_samples, n_members;
+    int n_cases, n_members, i;
     // Get number of cases
     cin >> n_cases;
     long results[n_cases];
     // Get case info, solve it and store solution
-    for(int i=0; i<n_cases; i++) {
+    for(i=0; i<n_cases; i++) {
         cin >> n_members;
         long members[n_members];
-        get_members(n_members, members);
         long sums[n_members+1];
-        get_sums(n_members, members, sums);
+        get_members(n_members, members, sums);
+        //get_sums(n_members, members, sums);
         results[i] = strongest_team(n_members, members, sums);
     }
     // Print solutions
-    for(int i=0; i<n_cases; i++) {
+    for(i=0; i<n_cases; i++) {
         cout << results[i] << endl;
     }
 
