@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1742249452 source:/home/pica/Bocconi/algo/WeakestLink/main.cpp
+	<iostream>
+	<stack>
+	<utility>
+
