@@ -1,127 +1,83 @@
-#include <iostream>
-#include <unordered_map>
-
-using namespace std;
-
-unordered_map<char, char> opposite = { {'1','0'}, {'0','1'} };
-
-string odd_case(int feature_count[], int n_features, int threshold) {
-    string player = "";
-    for(int i=0; i<n_features; i++) {
-        if (feature_count[i] > threshold) {
-            player += "0";
-        }
-        else {
-            player += "1";
-        }
-    }
-
-    return player;
-}
-
-string even_case(int feature_count[], int n_features, int threshold) {
-    string player = "";
-    bool turn = 1;
-
-    for(int i=0; i<n_features; i++) {
-        if (feature_count[i] > threshold) {
-            player += "0";
-        }
-        else if(feature_count[i] == threshold) {
-            if (turn)
-                player += "1";
-            else
-                player += "0";
-            turn = ! turn;
-        }
-        else {
-            player += "1";
-        }
-    }
-
-    return player;
-}
-
-/**
- * @brief counts how many players are equal to a particular one
+/* At first I approached this problem with a naive solution, focusing on the frequency of the single attributes and simply choosing wether to add an attribute if it appears less then n/2 times.
+ * This approach works for basic scenarios, but fails in more complex ones.
  *
- *
+ * The key to solve this problem is to view each skill set as a node of a graph. We consider nodes that differ for just one bit "neighbors".
+ * Using a BFS, we navigate the graph looking for the neighbor with the highest Hamming distance, ergo the most unique one!
  */
-int get_score(string player, int* players, int n_players, int n_features) {
-    int score = 0;
-    int features[n_features], i, h, f;
-    bool check;
+#include <iostream>
+#include <vector>
+#include <string>
+#include <queue>
+#include <cmath> // For pow, though bit shift is better
 
-    for(i=0; i<n_features; i++) {
-        features[i] = (player[i] - '0');
-    }
+int main() {
+    // Faster I/O, cool trick learned by competive programming try hards.
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
 
-    for(i=0; i<n_players; i++) {
-        check = true;
-        for(h=0; h<n_features; h++) {
-            f = *((players + i * n_features) + h);
-            if(features[h] != f) {
-                check = false;
-                break;
+    int n, k;
+    std::cin >> n >> k;
+
+    int num_possible_chars = 1 << k; // Sick way to calculate 2^k
+
+    std::vector<int> min_dist(num_possible_chars, -1); // Stores minimum Hamming distance, -1 means unvisited
+    std::queue<int> q; // Queue for BFS
+
+    // Read input and initialize
+    for (int i = 0; i < n; ++i) {
+        std::string s;
+        std::cin >> s;
+        int current_char_int = 0;
+         // Convert binary string to integer using bit shifts
+        for (int j = 0; j < k; ++j) {
+            if (s[j] == '1') {
+                current_char_int |= (1 << j); 
             }
         }
-        if(check)
-            score += 1;
+
+
+        if (min_dist[current_char_int] == -1) { // Handle duplicates, only add unique starting points
+            min_dist[current_char_int] = 0;
+            q.push(current_char_int);
+        }
     }
 
-    return score;
-}
+    // Perform BFS
+    while (!q.empty()) {
+        int current_char = q.front();
+        q.pop();
 
-int main()
-{
-    int i, h, n_players, n_features;
-    string player, o1, o2;
+        // Explore neighbors (differ by one bit)
+        for (int j = 0; j < k; ++j) {
+            int neighbor_char = current_char ^ (1 << j); // Flip the j-th bit
 
-    cin >> n_players;
-    cin >> n_features;
-
-    int players[n_players][n_features];
-
-    int feature_count[n_features] = {0};
-    int threshold = n_players / 2;
-    // Count how many times each feature was chosen
-    for(i=0; i<n_players; i++) {
-        cin >> player;
-        for(h=0; h<n_features; h++) {
-            if(player[h] == '1') {
-                feature_count[h] += 1;
-                players[i][h] = 1;
+            if (min_dist[neighbor_char] == -1) { // If neighbor hasn't been visited
+                min_dist[neighbor_char] = min_dist[current_char] + 1;
+                q.push(neighbor_char);
             }
-            else {
-                players[i][h] = 0;
-            }        }
+        }
     }
 
-    //cout << "***********" << endl;
+    // Find the character with the maximum minimum distance
+    int max_min_dist = -1;
+    int best_t = -1;
 
-    // For each feature, choose to use it or not based on what
-    // more than half of the players did.
-    /*
-    if((n_players % 2) == 0) {
-        player = even_case(feature_count, n_features, threshold);
-        cout << player << " - score: " << get_score(player, &players[0][0], n_players, n_features) << endl;
+    for (int t = 0; t < num_possible_chars; ++t) {
+        if (min_dist[t] > max_min_dist) {
+            max_min_dist = min_dist[t];
+            best_t = t;
+        }
     }
-    else
-        cout << odd_case(feature_count, n_features, threshold);
-    player = odd_case(feature_count, n_features, threshold);
-    cout << player << " - score: " << get_score(player, &players[0][0], n_players, n_features) << endl;
-    //cout << player;
-    */
-    o1 = odd_case(feature_count, n_features, threshold);
-    //cout << "O1: " << o1 << endl;
-    o2 = even_case(feature_count, n_features, threshold);
-    //cout << "O2: " << o2 << endl;
 
-    if( get_score(o1, &players[0][0], n_players, n_features) > get_score(o2, &players[0][0], n_players, n_features))
-        cout << o2;
-    else
-        cout << o1;
+     // Convert the best integer representation back to a binary string
+    std::string result_string = "";
+    for (int i = 0; i < k; ++i) {
+        result_string += ((best_t >> i) & 1) ? '1' : '0'; // Read bits from right to left
+    }
 
+
+    // Output the result
+    std::cout << result_string << std::endl;
 
     return 0;
 }
